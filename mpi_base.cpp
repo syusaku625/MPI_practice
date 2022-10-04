@@ -82,7 +82,7 @@ void set_global_node_number(vector<int> &local_data, int local_grid_x, int local
                 else if(i==local_size_y){
                     local_data.push_back(0);
                 }
-                else if(j==local_size_x){
+                else if(j==local_size_x+1){
                     local_data.push_back(0);
                 }
                 else if(i==0 && j==1){
@@ -330,7 +330,7 @@ void change_order(vector<int> &last_data, vector<int> recvbuf, int local_size_x,
             int local_judge_x = j/local_size_x;
             int local_judge_y = i/local_size_y;
             int rank_tmp = Gx*local_judge_y+local_judge_x;
-            last_data[i*point_num+j]=recvbuf[local_box*rank_tmp+local_size_y*(i%local_size_y)+(j%local_size_x)];
+            last_data[i*point_num+j]=recvbuf[local_box*rank_tmp+local_size_x*(i%local_size_y)+(j%local_size_x)];
         }
     }   
 }
@@ -351,6 +351,25 @@ void send_recv_data_x(vector<int> &local_data, int rank, int local_grid_x, int l
             local_data[(local_size_x+1)*i+local_size_x]=recv_test_right[i];
         }
     }
+    //case1
+    if(local_grid_y==0 && local_grid_x<Gx-1 && local_grid_x>0){
+        vector<int> send_test_left;
+        vector<int> send_test_right;
+        vector<int> recv_test_left(local_size_y);
+        vector<int> recv_test_right(local_size_y);
+        for (int i = 0; i < local_size_y; i++) {
+            send_test_left.push_back(local_data[(local_size_x+2)*i+1]);
+            send_test_right.push_back(local_data[(local_size_x+2)*i+local_size_x]);
+        }
+        MPI_Sendrecv(send_test_left.data(), local_size_y, MPI_INT, rank-1, 0, recv_test_left.data(), local_size_y, MPI_INT, rank-1, 0, MPI_COMM_WORLD, &st);
+        MPI_Sendrecv(send_test_right.data(), local_size_y, MPI_INT, rank+1, 0, recv_test_right.data(), local_size_y, MPI_INT, rank+1, 0, MPI_COMM_WORLD, &st);
+        for(int i=0; i<recv_test_right.size(); i++){
+            local_data[(local_size_x+2)*i+local_size_x+1]=recv_test_right[i];
+        }
+        for(int i=0; i<recv_test_left.size(); i++){
+            local_data[(local_size_x+2)*i]=recv_test_left[i];
+        }
+    }
     //case2
     if(local_grid_x==Gx-1 && local_grid_y==0){
         vector<int> send_test_left;
@@ -358,7 +377,7 @@ void send_recv_data_x(vector<int> &local_data, int rank, int local_grid_x, int l
         for (int i = 0; i < local_size_y; i++) {
             send_test_left.push_back(local_data[(local_size_x+1)*i+1]);
         }
-        MPI_Sendrecv(send_test_left.data(), local_size_y, MPI_INT, rank-1, 0, recv_test_left.data(), local_size_x, MPI_INT, rank-1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Sendrecv(send_test_left.data(), local_size_y, MPI_INT, rank-1, 0, recv_test_left.data(), local_size_y, MPI_INT, rank-1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         for(int i=0; i<recv_test_left.size(); i++){
             local_data[(local_size_x+1)*i]=recv_test_left[i];
         }
@@ -373,6 +392,25 @@ void send_recv_data_x(vector<int> &local_data, int rank, int local_grid_x, int l
         MPI_Sendrecv(send_test_right.data(), local_size_y, MPI_INT, rank+1, 0, recv_test_right.data(), local_size_y, MPI_INT, rank+1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         for(int i=0; i<recv_test_right.size(); i++){
             local_data[(local_size_x+1)*(i+1)+local_size_x]=recv_test_right[i];
+        }
+    }
+    //case7
+    if(local_grid_x<Gx-1 && local_grid_x>0 && local_grid_y==Gy-1){
+        vector<int> send_test_left;
+        vector<int> send_test_right;
+        vector<int> recv_test_left(local_size_y);
+        vector<int> recv_test_right(local_size_y);
+        for (int i = 0; i < local_size_y; i++) {
+            send_test_left.push_back(local_data[(local_size_x+2)*(i+1)+1]);
+            send_test_right.push_back(local_data[(local_size_x+2)*(i+1)+local_size_x]);
+        }
+        MPI_Sendrecv(send_test_left.data(), local_size_y, MPI_INT, rank-1, 0, recv_test_left.data(), local_size_y, MPI_INT, rank-1, 0, MPI_COMM_WORLD, &st);
+        MPI_Sendrecv(send_test_right.data(), local_size_y, MPI_INT, rank+1, 0, recv_test_right.data(), local_size_y, MPI_INT, rank+1, 0, MPI_COMM_WORLD, &st);
+        for(int i=0; i<recv_test_right.size(); i++){
+            local_data[(local_size_x+2)*(i+1)+local_size_x+1]=recv_test_right[i];
+        }
+        for(int i=0; i<recv_test_left.size(); i++){
+            local_data[(local_size_x+2)*(i+1)]=recv_test_left[i];
         }
     }
     //case8
@@ -405,6 +443,18 @@ void send_recv_data_y(vector<int> &local_data, int rank, int local_grid_x, int l
             local_data[(local_size_x+1)*local_size_y+i]=recv_test_lower[i];
         }
     }
+    //case1
+    if(local_grid_y==0 && local_grid_x<Gx-1 && local_grid_x>0){
+        vector<int> send_test_lower;
+        vector<int> recv_test_lower(local_size_x+2);
+        for (int i = 0; i < local_size_x+2; i++) {
+            send_test_lower.push_back(local_data[(local_size_x+2)*(local_size_y-1)+i]);
+        }
+        MPI_Sendrecv(send_test_lower.data(), local_size_x+2, MPI_INT, rank+Gx, 0, recv_test_lower.data(), local_size_x+2, MPI_INT, rank+Gx, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        for(int i=0; i<recv_test_lower.size(); i++){
+            local_data[(local_size_x+2)*local_size_y+i]=recv_test_lower[i];
+        }
+    }
     //case2
     if(local_grid_x==Gx-1 && local_grid_y==0){
         vector<int> send_test_lower;
@@ -425,6 +475,18 @@ void send_recv_data_y(vector<int> &local_data, int rank, int local_grid_x, int l
             send_test_upper.push_back(local_data[i+(local_size_x+1)]);
         }
         MPI_Sendrecv(send_test_upper.data(), local_size_x+1, MPI_INT, rank-Gx, 0, recv_test_upper.data(), local_size_x+1, MPI_INT, rank-Gx, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        for(int i=0; i<recv_test_upper.size(); i++){
+            local_data[i]=recv_test_upper[i];
+        }
+    }
+    //case7
+    if(local_grid_x<Gx-1 && local_grid_x>0 && local_grid_y==Gy-1){
+        vector<int> send_test_upper;
+        vector<int> recv_test_upper(local_size_x+2);
+        for (int i = 0; i < local_size_x+2; i++) {
+            send_test_upper.push_back(local_data[i+(local_size_x+2)]);
+        }
+        MPI_Sendrecv(send_test_upper.data(), local_size_x+2, MPI_INT, rank-Gx, 0, recv_test_upper.data(), local_size_x+2, MPI_INT, rank-Gx, 0, MPI_COMM_WORLD, &st);
         for(int i=0; i<recv_test_upper.size(); i++){
             local_data[i]=recv_test_upper[i];
         }
@@ -453,7 +515,7 @@ int main(int argc, char **argv)
     MPI_Dims_create(procs, 2, d2);
     vector<vector<double>> node;
     vector<vector<int>> element;
-    int point_num =32;
+    int point_num =6;
     set_field(node, element, point_num, 0.1);
     int local_grid_x = rank%d2[0];
     int local_grid_y = rank/d2[0];
@@ -479,8 +541,9 @@ int main(int argc, char **argv)
     if(rank==0){
         vector<int> last_data(local_size_x*local_size_y*procs);
         change_order(last_data,recvbuf,local_size_x,local_size_y,point_num,d2[0]);
-        int local_box=local_size_x*local_size_y;
-
+        //for(int i=0; i<last_data.size(); i++){
+        //    cout << last_data[i] << endl;
+        //}
     }
     MPI_Finalize();
 }

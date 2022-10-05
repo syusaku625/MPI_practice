@@ -515,7 +515,7 @@ int main(int argc, char **argv)
     MPI_Dims_create(procs, 2, d2);
     vector<vector<double>> node;
     vector<vector<int>> element;
-    int point_num =6;
+    int point_num =12;
     set_field(node, element, point_num, 0.1);
     int local_grid_x = rank%d2[0];
     int local_grid_y = rank/d2[0];
@@ -541,9 +541,9 @@ int main(int argc, char **argv)
     if(rank==0){
         vector<int> last_data(local_size_x*local_size_y*procs);
         change_order(last_data,recvbuf,local_size_x,local_size_y,point_num,d2[0]);
-        //for(int i=0; i<last_data.size(); i++){
-        //    cout << last_data[i] << endl;
-        //}
+        for(int i=0; i<last_data.size(); i++){
+            cout << last_data[i] << endl;
+        }
     }
     MPI_Finalize();
 }

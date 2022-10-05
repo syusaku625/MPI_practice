@@ -166,7 +166,7 @@ int main(int argc, char **argv)
     double diffusion_coefficient = 1e-2;
     vector<vector<double>> node;
     vector<vector<int>> element;
-    int point_num = 32;
+    int point_num = 36;
     set_field(node, element, point_num, 0.1);
     vector<vector<double>> gauss(4, vector<double>(2));
     gauss[0][0] = -0.577350296189626; gauss[0][1] = -0.577350296189626;

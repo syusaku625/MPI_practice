@@ -86,7 +86,7 @@ void set_global_node_number(vector<int> &local_data, int local_grid_x, int local
                 else if(i==local_size_y){
                     local_data.push_back(0);
                 }
-                else if(j==local_size_x){
+                else if(j==local_size_x+1){
                     local_data.push_back(0);
                 }
                 else if(i==0 && j==1){
@@ -266,6 +266,25 @@ void send_recv_data_x_int(vector<int> &local_data, int rank, int local_grid_x, i
             local_data[(local_size_x+1)*i+local_size_x]=recv_test_right[i];
         }
     }
+    //case1
+    if(local_grid_y==0 && local_grid_x<Gx-1 && local_grid_x>0){
+        vector<int> send_test_left;
+        vector<int> send_test_right;
+        vector<int> recv_test_left(local_size_y);
+        vector<int> recv_test_right(local_size_y);
+        for (int i = 0; i < local_size_y; i++) {
+            send_test_left.push_back(local_data[(local_size_x+2)*i+1]);
+            send_test_right.push_back(local_data[(local_size_x+2)*i+local_size_x]);
+        }
+        MPI_Sendrecv(send_test_left.data(), local_size_y, MPI_INT, rank-1, 0, recv_test_left.data(), local_size_y, MPI_INT, rank-1, 0, MPI_COMM_WORLD, &st);
+        MPI_Sendrecv(send_test_right.data(), local_size_y, MPI_INT, rank+1, 0, recv_test_right.data(), local_size_y, MPI_INT, rank+1, 0, MPI_COMM_WORLD, &st);
+        for(int i=0; i<recv_test_right.size(); i++){
+            local_data[(local_size_x+2)*i+local_size_x+1]=recv_test_right[i];
+        }
+        for(int i=0; i<recv_test_left.size(); i++){
+            local_data[(local_size_x+2)*i]=recv_test_left[i];
+        }
+    }
     //case2
     if(local_grid_x==Gx-1 && local_grid_y==0){
         vector<int> send_test_left;
@@ -273,7 +292,7 @@ void send_recv_data_x_int(vector<int> &local_data, int rank, int local_grid_x, i
         for (int i = 0; i < local_size_y; i++) {
             send_test_left.push_back(local_data[(local_size_x+1)*i+1]);
         }
-        MPI_Sendrecv(send_test_left.data(), local_size_y, MPI_INT, rank-1, 0, recv_test_left.data(), local_size_x, MPI_INT, rank-1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Sendrecv(send_test_left.data(), local_size_y, MPI_INT, rank-1, 0, recv_test_left.data(), local_size_y, MPI_INT, rank-1, 0, MPI_COMM_WORLD, &st);
         for(int i=0; i<recv_test_left.size(); i++){
             local_data[(local_size_x+1)*i]=recv_test_left[i];
         }
@@ -285,9 +304,28 @@ void send_recv_data_x_int(vector<int> &local_data, int rank, int local_grid_x, i
         for (int i = 0; i < local_size_y; i++) {
             send_test_right.push_back(local_data[(local_size_x+1)*(i+1)+(local_size_x-1)]);
         }
-        MPI_Sendrecv(send_test_right.data(), local_size_y, MPI_INT, rank+1, 0, recv_test_right.data(), local_size_y, MPI_INT, rank+1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Sendrecv(send_test_right.data(), local_size_y, MPI_INT, rank+1, 0, recv_test_right.data(), local_size_y, MPI_INT, rank+1, 0, MPI_COMM_WORLD, &st);
         for(int i=0; i<recv_test_right.size(); i++){
             local_data[(local_size_x+1)*(i+1)+local_size_x]=recv_test_right[i];
+        }
+    }
+    //case7
+    if(local_grid_x<Gx-1 && local_grid_x>0 && local_grid_y==Gy-1){
+        vector<int> send_test_left;
+        vector<int> send_test_right;
+        vector<int> recv_test_left(local_size_y);
+        vector<int> recv_test_right(local_size_y);
+        for (int i = 0; i < local_size_y; i++) {
+            send_test_left.push_back(local_data[(local_size_x+2)*(i+1)+1]);
+            send_test_right.push_back(local_data[(local_size_x+2)*(i+1)+local_size_x]);
+        }
+        MPI_Sendrecv(send_test_left.data(), local_size_y, MPI_INT, rank-1, 0, recv_test_left.data(), local_size_y, MPI_INT, rank-1, 0, MPI_COMM_WORLD, &st);
+        MPI_Sendrecv(send_test_right.data(), local_size_y, MPI_INT, rank+1, 0, recv_test_right.data(), local_size_y, MPI_INT, rank+1, 0, MPI_COMM_WORLD, &st);
+        for(int i=0; i<recv_test_right.size(); i++){
+            local_data[(local_size_x+2)*(i+1)+local_size_x+1]=recv_test_right[i];
+        }
+        for(int i=0; i<recv_test_left.size(); i++){
+            local_data[(local_size_x+2)*(i+1)]=recv_test_left[i];
         }
     }
     //case8
@@ -320,6 +358,25 @@ void send_recv_data_x_double(vector<double> &local_data, int rank, int local_gri
             local_data[(local_size_x+1)*i+local_size_x]=recv_test_right[i];
         }
     }
+    //case1
+    if(local_grid_y==0 && local_grid_x<Gx-1 && local_grid_x>0){
+        vector<double> send_test_left;
+        vector<double> send_test_right;
+        vector<double> recv_test_left(local_size_y);
+        vector<double> recv_test_right(local_size_y);
+        for (int i = 0; i < local_size_y; i++) {
+            send_test_left.push_back(local_data[(local_size_x+2)*i+1]);
+            send_test_right.push_back(local_data[(local_size_x+2)*i+local_size_x]);
+        }
+        MPI_Sendrecv(send_test_left.data(), local_size_y, MPI_DOUBLE, rank-1, 0, recv_test_left.data(), local_size_y, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &st);
+        MPI_Sendrecv(send_test_right.data(), local_size_y, MPI_DOUBLE, rank+1, 0, recv_test_right.data(), local_size_y, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &st);
+        for(int i=0; i<recv_test_right.size(); i++){
+            local_data[(local_size_x+2)*i+local_size_x+1]=recv_test_right[i];
+        }
+        for(int i=0; i<recv_test_left.size(); i++){
+            local_data[(local_size_x+2)*i]=recv_test_left[i];
+        }
+    }
     //case2
     if(local_grid_x==Gx-1 && local_grid_y==0){
         vector<double> send_test_left;
@@ -327,7 +384,7 @@ void send_recv_data_x_double(vector<double> &local_data, int rank, int local_gri
         for (int i = 0; i < local_size_y; i++) {
             send_test_left.push_back(local_data[(local_size_x+1)*i+1]);
         }
-        MPI_Sendrecv(send_test_left.data(), local_size_y, MPI_DOUBLE, rank-1, 0, recv_test_left.data(), local_size_x, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &st);
+        MPI_Sendrecv(send_test_left.data(), local_size_y, MPI_DOUBLE, rank-1, 0, recv_test_left.data(), local_size_y, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &st);
         for(int i=0; i<recv_test_left.size(); i++){
             local_data[(local_size_x+1)*i]=recv_test_left[i];
         }
@@ -342,6 +399,25 @@ void send_recv_data_x_double(vector<double> &local_data, int rank, int local_gri
         MPI_Sendrecv(send_test_right.data(), local_size_y, MPI_DOUBLE, rank+1, 0, recv_test_right.data(), local_size_y, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &st);
         for(int i=0; i<recv_test_right.size(); i++){
             local_data[(local_size_x+1)*(i+1)+local_size_x]=recv_test_right[i];
+        }
+    }
+    //case7
+    if(local_grid_x<Gx-1 && local_grid_x>0 && local_grid_y==Gy-1){
+        vector<double> send_test_left;
+        vector<double> send_test_right;
+        vector<double> recv_test_left(local_size_y);
+        vector<double> recv_test_right(local_size_y);
+        for (int i = 0; i < local_size_y; i++) {
+            send_test_left.push_back(local_data[(local_size_x+2)*(i+1)+1]);
+            send_test_right.push_back(local_data[(local_size_x+2)*(i+1)+local_size_x]);
+        }
+        MPI_Sendrecv(send_test_left.data(), local_size_y, MPI_DOUBLE, rank-1, 0, recv_test_left.data(), local_size_y, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, &st);
+        MPI_Sendrecv(send_test_right.data(), local_size_y, MPI_DOUBLE, rank+1, 0, recv_test_right.data(), local_size_y, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, &st);
+        for(int i=0; i<recv_test_right.size(); i++){
+            local_data[(local_size_x+2)*(i+1)+local_size_x+1]=recv_test_right[i];
+        }
+        for(int i=0; i<recv_test_left.size(); i++){
+            local_data[(local_size_x+2)*(i+1)]=recv_test_left[i];
         }
     }
     //case8
@@ -374,6 +450,18 @@ void send_recv_data_y_int(vector<int> &local_data, int rank, int local_grid_x, i
             local_data[(local_size_x+1)*local_size_y+i]=recv_test_lower[i];
         }
     }
+    //case1
+    if(local_grid_y==0 && local_grid_x<Gx-1 && local_grid_x>0){
+        vector<int> send_test_lower;
+        vector<int> recv_test_lower(local_size_x+2);
+        for (int i = 0; i < local_size_x+2; i++) {
+            send_test_lower.push_back(local_data[(local_size_x+2)*(local_size_y-1)+i]);
+        }
+        MPI_Sendrecv(send_test_lower.data(), local_size_x+2, MPI_INT, rank+Gx, 0, recv_test_lower.data(), local_size_x+2, MPI_INT, rank+Gx, 0, MPI_COMM_WORLD, &st);
+        for(int i=0; i<recv_test_lower.size(); i++){
+            local_data[(local_size_x+2)*local_size_y+i]=recv_test_lower[i];
+        }
+    }
     //case2
     if(local_grid_x==Gx-1 && local_grid_y==0){
         vector<int> send_test_lower;
@@ -398,6 +486,17 @@ void send_recv_data_y_int(vector<int> &local_data, int rank, int local_grid_x, i
             local_data[i]=recv_test_upper[i];
         }
     }
+    if(local_grid_x<Gx-1 && local_grid_x>0 && local_grid_y==Gy-1){
+        vector<int> send_test_upper;
+        vector<int> recv_test_upper(local_size_x+2);
+        for (int i = 0; i < local_size_x+2; i++) {
+            send_test_upper.push_back(local_data[i+(local_size_x+2)]);
+        }
+        MPI_Sendrecv(send_test_upper.data(), local_size_x+2, MPI_INT, rank-Gx, 0, recv_test_upper.data(), local_size_x+2, MPI_INT, rank-Gx, 0, MPI_COMM_WORLD, &st);
+        for(int i=0; i<recv_test_upper.size(); i++){
+            local_data[i]=recv_test_upper[i];
+        }
+    }
     //case8
     if(local_grid_x==Gx-1 && local_grid_y==Gy-1){
         vector<int> send_test_upper;
@@ -416,7 +515,7 @@ void send_recv_data_y_double(vector<double> &local_data, int rank, int local_gri
 {
     //のりしろの通信
     MPI_Status st;
-    //case0
+    ////case0
     if(local_grid_x==0 && local_grid_y==0){
         vector<double> send_test_lower;
         vector<double> recv_test_lower(local_size_x+1);
@@ -428,7 +527,19 @@ void send_recv_data_y_double(vector<double> &local_data, int rank, int local_gri
             local_data[(local_size_x+1)*local_size_y+i]=recv_test_lower[i];
         }
     }
-    //case2
+    ////case1
+    if(local_grid_y==0 && local_grid_x<Gx-1 && local_grid_x>0){
+        vector<double> send_test_lower;
+        vector<double> recv_test_lower(local_size_x+2);
+        for (int i = 0; i < local_size_x+2; i++) {
+            send_test_lower.push_back(local_data[(local_size_x+2)*(local_size_y-1)+i]);
+        }
+        MPI_Sendrecv(send_test_lower.data(), local_size_x+2, MPI_DOUBLE, rank+Gx, 0, recv_test_lower.data(), local_size_x+2, MPI_DOUBLE, rank+Gx, 0, MPI_COMM_WORLD, &st);
+        for(int i=0; i<recv_test_lower.size(); i++){
+            local_data[(local_size_x+2)*local_size_y+i]=recv_test_lower[i];
+        }
+    }
+    ////case2
     if(local_grid_x==Gx-1 && local_grid_y==0){
         vector<double> send_test_lower;
         vector<double> recv_test_lower(local_size_x+1);
@@ -439,6 +550,7 @@ void send_recv_data_y_double(vector<double> &local_data, int rank, int local_gri
         for(int i=0; i<recv_test_lower.size(); i++){
             local_data[(local_size_x+1)*local_size_y+i]=recv_test_lower[i];
         }
+        
     }
     //case6
     if(local_grid_x==0 && local_grid_y==Gy-1){
@@ -448,6 +560,18 @@ void send_recv_data_y_double(vector<double> &local_data, int rank, int local_gri
             send_test_upper.push_back(local_data[i+(local_size_x+1)]);
         }
         MPI_Sendrecv(send_test_upper.data(), local_size_x+1, MPI_DOUBLE, rank-Gx, 0, recv_test_upper.data(), local_size_x+1, MPI_DOUBLE, rank-Gx, 0, MPI_COMM_WORLD, &st);
+        for(int i=0; i<recv_test_upper.size(); i++){
+            local_data[i]=recv_test_upper[i];
+        }
+    }
+    ////case7
+    if(local_grid_x<Gx-1 && local_grid_x>0 && local_grid_y==Gy-1){
+        vector<double> send_test_upper;
+        vector<double> recv_test_upper(local_size_x+2);
+        for (int i = 0; i < local_size_x+2; i++) {
+            send_test_upper.push_back(local_data[i+(local_size_x+2)]);
+        }
+        MPI_Sendrecv(send_test_upper.data(), local_size_x+2, MPI_DOUBLE, rank-Gx, 0, recv_test_upper.data(), local_size_x+2, MPI_DOUBLE, rank-Gx, 0, MPI_COMM_WORLD, &st);
         for(int i=0; i<recv_test_upper.size(); i++){
             local_data[i]=recv_test_upper[i];
         }
@@ -676,7 +800,7 @@ void change_order(vector<double> &last_data, vector<double> recvbuf, int local_s
             int local_judge_x = j/local_size_x;
             int local_judge_y = i/local_size_y;
             int rank_tmp = Gx*local_judge_y+local_judge_x;
-            last_data[i*point_num+j]=recvbuf[local_box*rank_tmp+local_size_y*(i%local_size_y)+(j%local_size_x)];
+            last_data[i*point_num+j]=recvbuf[local_box*rank_tmp+local_size_x*(i%local_size_y)+(j%local_size_x)];
         }
     }   
 }
@@ -705,18 +829,175 @@ int main(int argc, char **argv)
     vector<int> local_data_global;
     int corner=local_grid_y*(local_size_y*point_num)+local_size_x*(local_grid_x);
     set_global_node_number(local_data_global,local_grid_x,local_grid_y,local_size_x,local_size_y,corner,point_num,d2[0],d2[1]);    
-    vector<double> local_data((local_size_x+1)*(local_size_y+1));
+    vector<double> local_data;
+    int numofNode;
+    //x方向通信
+    send_recv_data_x_int(local_data_global,rank,local_grid_x,local_grid_y,local_size_x,local_size_y,d2[0],d2[1]);
+    //y方向通信
+    send_recv_data_y_int(local_data_global,rank,local_grid_x,local_grid_y,local_size_x,local_size_y,d2[0],d2[1]);
+    vector<vector<int>> global_element;
+    vector<vector<int>> local_element;
+    
+    //case0
+    if(local_grid_x==0 && local_grid_y==0){
+        local_data.resize((local_size_x+1)*(local_size_y+1));
+        numofNode= (local_size_x+1)*(local_size_y+1);
+        for(int i=0; i<local_size_y; i++){
+            for(int j=0; j<local_size_x; j++){
+                vector<int> global_element_tmp;
+                global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]);
+                global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]+local_size_x*d2[0]);
+                global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]+local_size_x*d2[0]+1);
+                global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]+1);
+                global_element.push_back(global_element_tmp);
+            }
+        }
+        for(int i=0; i<local_size_y; i++){
+            for(int j=0; j<local_size_x; j++){
+                vector<int> local_element_tmp;
+                local_element_tmp.push_back((local_size_x+1)*i+j);
+                local_element_tmp.push_back((local_size_x+1)*i+j+local_size_x+1);
+                local_element_tmp.push_back((local_size_x+1)*i+j+local_size_x+2);
+                local_element_tmp.push_back((local_size_x+1)*i+j+1);
+                local_element.push_back(local_element_tmp);
+            }
+        }
+    }
+    //case1
+    if(local_grid_y==0 && local_grid_x<d2[0]-1 && local_grid_x>0){
+        local_data.resize((local_size_x+2)*(local_size_y+1));
+        numofNode= (local_size_x+2)*(local_size_y+1);
+        for(int i=0; i<local_size_y; i++){
+            for(int j=0; j<local_size_x+1; j++){
+                vector<int> global_element_tmp;
+                global_element_tmp.push_back(local_data_global[(local_size_x+2)*i+j]);
+                global_element_tmp.push_back(local_data_global[(local_size_x+2)*i+j]+(local_size_x)*d2[0]);
+                global_element_tmp.push_back(local_data_global[(local_size_x+2)*i+j]+(local_size_x)*d2[0]+1);
+                global_element_tmp.push_back(local_data_global[(local_size_x+2)*i+j]+1);
+                global_element.push_back(global_element_tmp);
+            }
+        }
+        for(int i=0; i<local_size_y; i++){
+            for(int j=0; j<local_size_x+1; j++){
+                vector<int> local_element_tmp;
+                local_element_tmp.push_back((local_size_x+2)*i+j);
+                local_element_tmp.push_back((local_size_x+2)*i+j+(local_size_x+1)+1);
+                local_element_tmp.push_back((local_size_x+2)*i+j+(local_size_x+1)+2);
+                local_element_tmp.push_back((local_size_x+2)*i+j+1);
+                local_element.push_back(local_element_tmp);
+            }
+        }
+    }
+    //case2
+    if(local_grid_x==d2[0]-1 && local_grid_y==0){
+        local_data.resize((local_size_x+1)*(local_size_y+1));
+        numofNode= (local_size_x+1)*(local_size_y+1);
+        for(int i=0; i<local_size_y; i++){
+            for(int j=0; j<local_size_x; j++){
+                vector<int> global_element_tmp;
+                global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]);
+                global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]+local_size_x*d2[0]);
+                global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]+local_size_x*d2[0]+1);
+                global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]+1);
+                global_element.push_back(global_element_tmp);
+            }
+        }
+        for(int i=0; i<local_size_y; i++){
+            for(int j=0; j<local_size_x; j++){
+                vector<int> local_element_tmp;
+                local_element_tmp.push_back((local_size_x+1)*i+j);
+                local_element_tmp.push_back((local_size_x+1)*i+j+local_size_x+1);
+                local_element_tmp.push_back((local_size_x+1)*i+j+local_size_x+2);
+                local_element_tmp.push_back((local_size_x+1)*i+j+1);
+                local_element.push_back(local_element_tmp);
+            }
+        }
+    }
+    //case6
+    if(local_grid_x==0 && local_grid_y==d2[1]-1){
+        local_data.resize((local_size_x+1)*(local_size_y+1));
+        numofNode= (local_size_x+1)*(local_size_y+1);
+        for(int i=0; i<local_size_y; i++){
+            for(int j=0; j<local_size_x; j++){
+                vector<int> global_element_tmp;
+                global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]);
+                global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]+local_size_x*d2[0]);
+                global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]+local_size_x*d2[0]+1);
+                global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]+1);
+                global_element.push_back(global_element_tmp);
+            }
+        }
+        for(int i=0; i<local_size_y; i++){
+            for(int j=0; j<local_size_x; j++){
+                vector<int> local_element_tmp;
+                local_element_tmp.push_back((local_size_x+1)*i+j);
+                local_element_tmp.push_back((local_size_x+1)*i+j+local_size_x+1);
+                local_element_tmp.push_back((local_size_x+1)*i+j+local_size_x+2);
+                local_element_tmp.push_back((local_size_x+1)*i+j+1);
+                local_element.push_back(local_element_tmp);
+            }
+        }
+    }
+    //case7
+    if(local_grid_x<d2[0]-1 && local_grid_x>0 && local_grid_y==d2[1]-1){
+        local_data.resize((local_size_x+2)*(local_size_y+1));
+        numofNode= (local_size_x+2)*(local_size_y+1);
+        for(int i=0; i<local_size_y; i++){
+            for(int j=0; j<local_size_x+1; j++){
+                vector<int> global_element_tmp;
+                global_element_tmp.push_back(local_data_global[(local_size_x+2)*i+j]);
+                global_element_tmp.push_back(local_data_global[(local_size_x+2)*i+j]+(local_size_x)*d2[0]);
+                global_element_tmp.push_back(local_data_global[(local_size_x+2)*i+j]+(local_size_x)*d2[0]+1);
+                global_element_tmp.push_back(local_data_global[(local_size_x+2)*i+j]+1);
+                global_element.push_back(global_element_tmp);
+            }
+        }
+        for(int i=0; i<local_size_y; i++){
+            for(int j=0; j<local_size_x+1; j++){
+                vector<int> local_element_tmp;
+                local_element_tmp.push_back((local_size_x+2)*i+j);
+                local_element_tmp.push_back((local_size_x+2)*i+j+(local_size_x+1)+1);
+                local_element_tmp.push_back((local_size_x+2)*i+j+(local_size_x+1)+2);
+                local_element_tmp.push_back((local_size_x+2)*i+j+1);
+                local_element.push_back(local_element_tmp);
+            }
+        }
+    }
+    //case8
+    if(local_grid_x==d2[0]-1 && local_grid_y==d2[1]-1){
+        local_data.resize((local_size_x+1)*(local_size_y+1));
+        numofNode= (local_size_x+1)*(local_size_y+1);
+        for(int i=0; i<local_size_y; i++){
+            for(int j=0; j<local_size_x; j++){
+                vector<int> global_element_tmp;
+                global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]);
+                global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]+local_size_x*d2[0]);
+                global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]+local_size_x*d2[0]+1);
+                global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]+1);
+                global_element.push_back(global_element_tmp);
+            }
+        }
+        for(int i=0; i<local_size_y; i++){
+            for(int j=0; j<local_size_x; j++){
+                vector<int> local_element_tmp;
+                local_element_tmp.push_back((local_size_x+1)*i+j);
+                local_element_tmp.push_back((local_size_x+1)*i+j+local_size_x+1);
+                local_element_tmp.push_back((local_size_x+1)*i+j+local_size_x+2);
+                local_element_tmp.push_back((local_size_x+1)*i+j+1);
+                local_element.push_back(local_element_tmp);
+            }
+        }
+    }
+
     if(rank==0){
         local_data[0] = 1.0;
     }
-
+    
     vector<vector<double>> gauss(4, vector<double>(2));
     gauss[0][0] = -0.577350296189626; gauss[0][1] = -0.577350296189626;
     gauss[1][0] = -0.577350296189626; gauss[1][1] = 0.577350296189626; 
     gauss[2][0] = 0.577350296189626; gauss[2][1] = -0.577350296189626; 
     gauss[3][0] = 0.577350296189626; gauss[3][1] = 0.577350296189626;
-
-    int numofNode = (local_size_x+1)*(local_size_y+1);
 
     vector<vector<double>> D;
     vector<vector<double>> mass;
@@ -730,41 +1011,7 @@ int main(int argc, char **argv)
         mass[i].resize(numofNode);
     }
     mass_centralization.resize(numofNode);
-    //x方向通信
-    send_recv_data_x_int(local_data_global,rank,local_grid_x,local_grid_y,local_size_x,local_size_y,d2[0],d2[1]);
-    //y方向通信
-    send_recv_data_y_int(local_data_global,rank,local_grid_x,local_grid_y,local_size_x,local_size_y,d2[0],d2[1]);
-
-    vector<vector<int>> global_element;
-    vector<vector<int>> local_element;
-    for(int i=0; i<local_size_y; i++){
-        for(int j=0; j<local_size_x; j++){
-            vector<int> global_element_tmp;
-            global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]);
-            global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]+local_size_x*d2[0]);
-            global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]+local_size_x*d2[0]+1);
-            global_element_tmp.push_back(local_data_global[(local_size_x+1)*i+j]+1);
-            global_element.push_back(global_element_tmp);
-        }
-    }
-    for(int i=0; i<local_size_y; i++){
-        for(int j=0; j<local_size_x; j++){
-            vector<int> local_element_tmp;
-            local_element_tmp.push_back((local_size_x+1)*i+j);
-            local_element_tmp.push_back((local_size_x+1)*i+j+local_size_x+1);
-            local_element_tmp.push_back((local_size_x+1)*i+j+local_size_x+2);
-            local_element_tmp.push_back((local_size_x+1)*i+j+1);
-            local_element.push_back(local_element_tmp);
-        }
-    }
-    //if(rank==0){
-    //    for(int i=0; i<global_element.size(); i++){
-    //        for(int j=0; j<global_element[i].size(); j++){
-    //            cout << global_element[i][j] << " ";
-    //        }
-    //        cout << endl;
-    //    }
-    //}
+    
     for(int i=0; i<local_element.size(); i++){
         vector<double> N(4); 
         vector<vector<double>> dNdr(4, vector<double>(2));
@@ -828,7 +1075,7 @@ int main(int argc, char **argv)
         if(rank==0){
             local_data[0] = 1.0;
         }
-        
+
         send_recv_data_x_double(local_data, rank, local_grid_x, local_grid_y, local_size_x, local_size_y, d2[0], d2[1]);
         send_recv_data_y_double(local_data,rank,local_grid_x,local_grid_y,local_size_x,local_size_y,d2[0],d2[1]);
         
@@ -841,7 +1088,6 @@ int main(int argc, char **argv)
                 recvbuf.resize(local_size_x * local_size_y * procs);
             }
             MPI_Gather(send_buf.data(), local_size_x * local_size_y, MPI_DOUBLE, recvbuf.data(), local_size_x * local_size_y, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
             if(rank==0){
                 vector<double> last_data(local_size_x*local_size_y*procs);
                 change_order(last_data,recvbuf,local_size_x,local_size_y,point_num,d2[0]);
@@ -854,5 +1100,4 @@ int main(int argc, char **argv)
     clock_t end = clock();   
     std::cout << "duration = " << (double)(end - start) / CLOCKS_PER_SEC << "sec.\n";
     MPI_Finalize();
-
 }

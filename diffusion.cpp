@@ -242,15 +242,15 @@ int main(int argc, char **argv)
         vector<double> MDcR(node.size(),0.0);
         vector<double> MDC(node.size(),0.0);
     
-        for(int i=0; i<node.size(); i++){
-            for(int j=0; j<node.size(); j++){
-                DC[i] += D[i][j] * (C[j]);
+        for(int j=0; j<node.size(); j++){
+            for(int k=0; k<node.size(); k++){
+                DC[j] += D[j][k] * (C[k]);
             }
         }
 
-        for(int i=0; i<node.size(); i++){
-            MDC[i] = 1.0/mass_centralization[i]*DC[i];
-            C[i] = C[i] - dt * MDC[i];
+        for(int j=0; j<node.size(); j++){
+            MDC[j] = 1.0/mass_centralization[j]*DC[j];
+            C[j] = C[j] - dt * MDC[j];
         }
 
         C[0]=1.0;

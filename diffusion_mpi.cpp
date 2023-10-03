@@ -812,7 +812,7 @@ int main(int argc, char **argv)
     double diffusion_coefficient = 1e-2;
     vector<vector<double>> node;
     vector<vector<int>> element;
-    int point_num = 32;
+    int point_num = 64;
     set_field(node, element, point_num, 0.1);
 
     MPI_Init(&argc, &argv);
@@ -1062,15 +1062,15 @@ int main(int argc, char **argv)
         vector<double> MDcR(numofNode,0.0);
         vector<double> MDC(numofNode,0.0);
 
-        for(int i=0; i<numofNode; i++){
-            for(int j=0; j<numofNode; j++){
-                DC[i] += D[i][j] * (local_data[j]);
+        for(int j=0; j<numofNode; j++){
+            for(int k=0; k<numofNode; k++){
+                DC[j] += D[j][k] * (local_data[k]);
             }
         }
 
-        for(int i=0; i<numofNode; i++){
-            MDC[i] = 1.0/mass_centralization[i]*DC[i];
-            local_data[i] = local_data[i] - dt * MDC[i];
+        for(int j=0; j<numofNode; j++){
+            MDC[j] = 1.0/mass_centralization[j]*DC[j];
+            local_data[j] = local_data[j] - dt * MDC[j];
         }
         if(rank==0){
             local_data[0] = 1.0;
